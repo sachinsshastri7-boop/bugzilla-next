@@ -1,4 +1,31 @@
-import { IssueStatus, Priority, Severity, Resolution, Role } from "@prisma/client";
+export type Role = "ADMIN" | "DEVELOPER" | "QA" | "REPORTER";
+
+export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export type Severity =
+  | "TRIVIAL"
+  | "MINOR"
+  | "NORMAL"
+  | "MAJOR"
+  | "CRITICAL"
+  | "BLOCKER";
+
+export type IssueStatus =
+  | "UNCONFIRMED"
+  | "NEW"
+  | "ASSIGNED"
+  | "IN_PROGRESS"
+  | "RESOLVED"
+  | "VERIFIED"
+  | "CLOSED"
+  | "REOPENED";
+
+export type Resolution =
+  | "FIXED"
+  | "INVALID"
+  | "DUPLICATE"
+  | "WONTFIX"
+  | "WORKSFORME";
 
 export interface UserSummary {
   id: string;

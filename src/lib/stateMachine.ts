@@ -1,14 +1,14 @@
-import { IssueStatus } from "@prisma/client";
+import { IssueStatus } from "@/types";
 
 export const ALLOWED_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
-  UNCONFIRMED: [IssueStatus.NEW, IssueStatus.RESOLVED, IssueStatus.CLOSED],
-  NEW: [IssueStatus.ASSIGNED, IssueStatus.IN_PROGRESS, IssueStatus.RESOLVED],
-  ASSIGNED: [IssueStatus.IN_PROGRESS, IssueStatus.RESOLVED],
-  IN_PROGRESS: [IssueStatus.RESOLVED, IssueStatus.NEW],
-  RESOLVED: [IssueStatus.VERIFIED, IssueStatus.REOPENED, IssueStatus.CLOSED],
-  VERIFIED: [IssueStatus.CLOSED, IssueStatus.REOPENED],
-  CLOSED: [IssueStatus.REOPENED],
-  REOPENED: [IssueStatus.ASSIGNED, IssueStatus.IN_PROGRESS, IssueStatus.RESOLVED],
+  UNCONFIRMED: ["NEW", "RESOLVED", "CLOSED"],
+  NEW: ["ASSIGNED", "IN_PROGRESS", "RESOLVED"],
+  ASSIGNED: ["IN_PROGRESS", "RESOLVED"],
+  IN_PROGRESS: ["RESOLVED", "NEW"],
+  RESOLVED: ["VERIFIED", "REOPENED", "CLOSED"],
+  VERIFIED: ["CLOSED", "REOPENED"],
+  CLOSED: ["REOPENED"],
+  REOPENED: ["ASSIGNED", "IN_PROGRESS", "RESOLVED"],
 };
 
 export function isValidTransition(current: IssueStatus, next: IssueStatus): boolean {

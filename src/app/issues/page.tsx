@@ -8,11 +8,9 @@ import IssueTable from "@/components/issues/IssueTable";
 import CreateIssueModal from "@/components/issues/CreateIssueModal";
 import IssueDetailView from "@/components/issues/IssueDetailView";
 import CommandPalette from "@/components/layout/CommandPalette";
-import { IssueItem } from "@/types";
-import { IssueStatus, Priority, Severity, Role } from "@prisma/client";
-import { LayoutGrid, List, PlusCircle, Filter } from "lucide-react";
+import { IssueItem, IssueStatus, Priority, Severity, Role } from "@/types";
+import { LayoutGrid, List, PlusCircle } from "lucide-react";
 
-// Initial mock data mirroring your database seed structure
 const INITIAL_ISSUES: IssueItem[] = [
   {
     id: "iss-101",
@@ -20,9 +18,9 @@ const INITIAL_ISSUES: IssueItem[] = [
     title: "Memory leak during concurrent state transitions",
     description:
       "When 50+ concurrent requests attempt to update issue status, the state machine validation worker leaks memory handles in worker threads.",
-    status: IssueStatus.IN_PROGRESS,
-    priority: Priority.URGENT,
-    severity: Severity.BLOCKER,
+    status: "IN_PROGRESS",
+    priority: "URGENT",
+    severity: "BLOCKER",
     environment: "Node v20.20 / PostgreSQL 16 / Linux x64",
     version: "v1.2.0-beta",
     createdAt: new Date("2026-08-25"),
@@ -33,13 +31,13 @@ const INITIAL_ISSUES: IssueItem[] = [
       id: "u1",
       name: "Sachin (Lead Dev)",
       email: "sachin@dev.org",
-      role: Role.ADMIN,
+      role: "ADMIN",
     },
     reporter: {
       id: "u3",
       name: "Sreenidhi (QA Manager)",
       email: "sreenidhi@qa.org",
-      role: Role.QA,
+      role: "QA",
     },
     _count: { comments: 2, blockedBy: 1 },
   },
@@ -49,9 +47,9 @@ const INITIAL_ISSUES: IssueItem[] = [
     title: "Kanban board card drag animation stutters on Safari",
     description:
       "Dragging issue cards across status columns causes frame drops below 30fps on WebKit engines.",
-    status: IssueStatus.NEW,
-    priority: Priority.HIGH,
-    severity: Severity.MINOR,
+    status: "NEW",
+    priority: "HIGH",
+    severity: "MINOR",
     environment: "Safari 17.5 / macOS Sequoia",
     version: "v2.0.0",
     createdAt: new Date("2026-08-26"),
@@ -62,13 +60,13 @@ const INITIAL_ISSUES: IssueItem[] = [
       id: "u2",
       name: "Shrivishnu",
       email: "vishnu@dev.org",
-      role: Role.DEVELOPER,
+      role: "DEVELOPER",
     },
     reporter: {
       id: "u1",
       name: "Sachin (Lead Dev)",
       email: "sachin@dev.org",
-      role: Role.ADMIN,
+      role: "ADMIN",
     },
     _count: { comments: 0, blockedBy: 0 },
   },
@@ -78,9 +76,9 @@ const INITIAL_ISSUES: IssueItem[] = [
     title: "Unauthorized role can view private security comments",
     description:
       "Users with REPORTER role can bypass ACL restrictions via direct API calls to fetch private comments.",
-    status: IssueStatus.ASSIGNED,
-    priority: Priority.URGENT,
-    severity: Severity.CRITICAL,
+    status: "ASSIGNED",
+    priority: "URGENT",
+    severity: "CRITICAL",
     environment: "Production Cluster EU-1",
     version: "v1.1.9",
     createdAt: new Date("2026-08-24"),
@@ -91,13 +89,13 @@ const INITIAL_ISSUES: IssueItem[] = [
       id: "u1",
       name: "Sachin (Lead Dev)",
       email: "sachin@dev.org",
-      role: Role.ADMIN,
+      role: "ADMIN",
     },
     reporter: {
       id: "u3",
       name: "Sreenidhi (QA Manager)",
       email: "sreenidhi@qa.org",
-      role: Role.QA,
+      role: "QA",
     },
     _count: { comments: 1, blockedBy: 0 },
   },
@@ -111,7 +109,6 @@ export default function IssuesPage() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [selectedIssueKey, setSelectedIssueKey] = useState<string | null>(null);
 
-  // Filter issues based on top bar search
   const filteredIssues = issues.filter(
     (issue) =>
       issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -120,21 +117,19 @@ export default function IssuesPage() {
         issue.component.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Handle status update from Kanban or Detail modal
   const handleStatusChange = (issueId: string, newStatus: IssueStatus) => {
     setIssues((prev) =>
       prev.map((iss) => (iss.id === issueId ? { ...iss, status: newStatus } : iss))
     );
   };
 
-  // Handle creating a new bug
   const handleCreateBug = (newBugData: any) => {
     const newIssue: IssueItem = {
       id: `iss-${Date.now()}`,
       key: `${newBugData.projectKey}-${Math.floor(100 + Math.random() * 900)}`,
       title: newBugData.title,
       description: newBugData.description,
-      status: IssueStatus.NEW,
+      status: "NEW",
       priority: newBugData.priority,
       severity: newBugData.severity,
       environment: newBugData.environment,
@@ -144,7 +139,7 @@ export default function IssuesPage() {
       project: { key: newBugData.projectKey, name: newBugData.projectKey === "CORE" ? "Core Engine Infrastructure" : "Next.js Frontend" },
       component: { name: newBugData.component },
       assignee: null,
-      reporter: { id: "u1", name: "Sachin (Lead Dev)", email: "sachin@dev.org", role: Role.ADMIN },
+      reporter: { id: "u1", name: "Sachin (Lead Dev)", email: "sachin@dev.org", role: "ADMIN" },
       _count: { comments: 0, blockedBy: 0 },
     };
 
@@ -155,24 +150,16 @@ export default function IssuesPage() {
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-rose-500 selection:text-black">
-      
-      {/* Navigation Sidebar */}
       <Sidebar onOpenCreateModal={() => setIsCreateModalOpen(true)} />
 
-      {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        
-        {/* Top Header Controls */}
         <TopNav
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
 
-        {/* Dashboard Content Container */}
         <main className="flex-1 p-6 space-y-6 overflow-y-auto">
-          
-          {/* Header Action Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -186,7 +173,6 @@ export default function IssuesPage() {
               </p>
             </div>
 
-            {/* View Switcher Controls */}
             <div className="flex items-center gap-2">
               <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono">
                 <button
@@ -220,7 +206,6 @@ export default function IssuesPage() {
             </div>
           </div>
 
-          {/* Active View Display */}
           {viewMode === "kanban" ? (
             <IssueKanban
               initialIssues={filteredIssues}
@@ -233,11 +218,9 @@ export default function IssuesPage() {
               onSelectIssue={(key) => setSelectedIssueKey(key)}
             />
           )}
-
         </main>
       </div>
 
-      {/* Modals & Command Palette */}
       {isCreateModalOpen && (
         <CreateIssueModal
           onClose={() => setIsCreateModalOpen(false)}
@@ -266,7 +249,6 @@ export default function IssuesPage() {
           }}
         />
       )}
-
     </div>
   );
 }

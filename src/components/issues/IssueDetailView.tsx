@@ -1,28 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { IssueItem } from "@/types";
-import { IssueStatus, Resolution } from "@prisma/client";
+import { IssueItem, IssueStatus } from "@/types";
 import {
   getStatusStyle,
   getPriorityStyle,
   getSeverityStyle,
-  formatDate,
 } from "@/lib/utils";
-import { isValidTransition, ALLOWED_TRANSITIONS } from "@/lib/stateMachine";
+import { ALLOWED_TRANSITIONS } from "@/lib/stateMachine";
 import ActivityTimeline from "./ActivityTimeline";
-import {
-  X,
-  Bug,
-  Cpu,
-  Layers,
-  User,
-  GitPullRequest,
-  CheckCircle2,
-  AlertTriangle,
-  MessageSquare,
-  Send,
-} from "lucide-react";
+import { X, Send } from "lucide-react";
 
 interface IssueDetailViewProps {
   issue: IssueItem;
@@ -73,7 +60,6 @@ export default function IssueDetailView({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-zinc-800 rounded-2xl p-6 text-zinc-100 shadow-2xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
         
-        {/* Header Bar */}
         <div className="flex items-start justify-between border-b border-zinc-800/80 pb-4 mb-5">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2.5">
@@ -97,13 +83,9 @@ export default function IssueDetailView({
           </button>
         </div>
 
-        {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Main Info Column (2 cols) */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Description */}
             <div className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-2">
               <h4 className="text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
                 Description / Reproduction Steps
@@ -113,7 +95,6 @@ export default function IssueDetailView({
               </p>
             </div>
 
-            {/* Lifecycle State Actions */}
             <div className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-2.5">
               <h4 className="text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
                 State Machine Transition
@@ -135,7 +116,6 @@ export default function IssueDetailView({
               </div>
             </div>
 
-            {/* Tabs for Comments vs Audit History */}
             <div className="space-y-4">
               <div className="flex border-b border-zinc-800 text-xs font-mono">
                 <button
@@ -162,7 +142,6 @@ export default function IssueDetailView({
 
               {activeTab === "details" ? (
                 <div className="space-y-4">
-                  {/* Discussion Comments */}
                   <div className="space-y-3">
                     {comments.map((c) => (
                       <div
@@ -178,7 +157,6 @@ export default function IssueDetailView({
                     ))}
                   </div>
 
-                  {/* Add Comment */}
                   <form onSubmit={handleAddComment} className="flex gap-2">
                     <input
                       type="text"
@@ -213,9 +191,7 @@ export default function IssueDetailView({
 
           </div>
 
-          {/* Sidebar Attributes Column (1 col) */}
           <div className="space-y-4 text-xs font-mono bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/80 h-fit">
-            
             <div className="space-y-1 pb-3 border-b border-zinc-800">
               <span className="text-[10px] text-zinc-500 uppercase">Priority / Severity</span>
               <div className="flex items-center justify-between">
@@ -252,9 +228,7 @@ export default function IssueDetailView({
               <p className="text-zinc-400 text-[11px]">{issue.environment || "None provided"}</p>
               <p className="text-zinc-500 text-[10px]">Version: {issue.version || "N/A"}</p>
             </div>
-
           </div>
-
         </div>
 
       </div>

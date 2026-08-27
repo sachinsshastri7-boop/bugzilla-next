@@ -7,8 +7,7 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { IssueStatus, Priority, Severity } from "@prisma/client";
-import { IssueItem } from "@/types";
+import { IssueItem, IssueStatus, Priority, Severity } from "@/types";
 import {
   getStatusStyle,
   getPriorityStyle,
@@ -16,11 +15,8 @@ import {
 } from "@/lib/utils";
 import { isValidTransition } from "@/lib/stateMachine";
 import {
-  AlertCircle,
   MessageSquare,
   GitPullRequest,
-  CheckCircle2,
-  Clock,
   User,
   ShieldAlert,
 } from "lucide-react";
@@ -31,13 +27,12 @@ interface IssueKanbanProps {
   onSelectIssue?: (issueKey: string) => void;
 }
 
-// Columns defining the primary Bugzilla lifecycle stages
 const KANBAN_COLUMNS: { id: IssueStatus; title: string; color: string }[] = [
-  { id: IssueStatus.NEW, title: "New / Reported", color: "border-blue-500/40" },
-  { id: IssueStatus.ASSIGNED, title: "Assigned", color: "border-purple-500/40" },
-  { id: IssueStatus.IN_PROGRESS, title: "In Progress", color: "border-amber-500/40" },
-  { id: IssueStatus.RESOLVED, title: "Resolved", color: "border-emerald-500/40" },
-  { id: IssueStatus.VERIFIED, title: "Verified / Closed", color: "border-teal-500/40" },
+  { id: "NEW", title: "New / Reported", color: "border-blue-500/40" },
+  { id: "ASSIGNED", title: "Assigned", color: "border-purple-500/40" },
+  { id: "IN_PROGRESS", title: "In Progress", color: "border-amber-500/40" },
+  { id: "RESOLVED", title: "Resolved", color: "border-emerald-500/40" },
+  { id: "VERIFIED", title: "Verified / Closed", color: "border-teal-500/40" },
 ];
 
 export default function IssueKanban({
@@ -48,11 +43,10 @@ export default function IssueKanban({
   const [issues, setIssues] = useState<IssueItem[]>(initialIssues);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Group issues into their respective columns
   const getIssuesByStatus = (status: IssueStatus) => {
-    if (status === IssueStatus.VERIFIED) {
+    if (status === "VERIFIED") {
       return issues.filter(
-        (i) => i.status === IssueStatus.VERIFIED || i.status === IssueStatus.CLOSED
+        (i) => i.status === "VERIFIED" || i.status === "CLOSED"
       );
     }
     return issues.filter((i) => i.status === status);
@@ -74,7 +68,6 @@ export default function IssueKanban({
 
     if (!draggedIssue) return;
 
-    // Validate Bugzilla Lifecycle Transition rules
     if (!isValidTransition(draggedIssue.status, targetStatus)) {
       setErrorMessage(
         `Invalid status transition from '${draggedIssue.status}' to '${targetStatus}'.`
@@ -83,7 +76,6 @@ export default function IssueKanban({
       return;
     }
 
-    // Optimistic UI update
     const updatedIssues = issues.map((i) =>
       i.id === draggableId ? { ...i, status: targetStatus } : i
     );
@@ -96,7 +88,6 @@ export default function IssueKanban({
 
   return (
     <div className="space-y-4">
-      {/* Toast Notification for Invalid Transitions */}
       {errorMessage && (
         <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center justify-between animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
@@ -112,7 +103,6 @@ export default function IssueKanban({
         </div>
       )}
 
-      {/* Drag and Drop Context */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto pb-6">
           {KANBAN_COLUMNS.map((col) => {
@@ -123,7 +113,6 @@ export default function IssueKanban({
                 key={col.id}
                 className="flex flex-col bg-zinc-950/40 border border-zinc-800/80 rounded-2xl p-3 min-w-[260px] min-h-[600px]"
               >
-                {/* Column Header */}
                 <div
                   className={`flex items-center justify-between pb-3 mb-3 border-b border-zinc-800/80 border-t-2 ${col.color} pt-2 px-1`}
                 >
@@ -135,7 +124,6 @@ export default function IssueKanban({
                   </span>
                 </div>
 
-                {/* Droppable Area */}
                 <Droppable droppableId={col.id}>
                   {(provided, snapshot) => (
                     <div
@@ -148,7 +136,6 @@ export default function IssueKanban({
                       {colIssues.map((issue, index) => {
                         const priorityInfo = getPriorityStyle(issue.priority);
                         const severityInfo = getSeverityStyle(issue.severity);
-                        const statusStyle = getStatusStyle(issue.status);
 
                         return (
                           <Draggable
@@ -170,7 +157,6 @@ export default function IssueKanban({
                                     : "border-zinc-800/90 hover:border-zinc-700/80"
                                 }`}
                               >
-                                {/* Header: Issue Key & Priority */}
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
                                     {issue.key}
@@ -182,12 +168,10 @@ export default function IssueKanban({
                                   </div>
                                 </div>
 
-                                {/* Title */}
                                 <h4 className="text-xs font-semibold text-zinc-100 line-clamp-2 leading-snug group-hover:text-rose-300 transition-colors mb-2">
                                   {issue.title}
                                 </h4>
 
-                                {/* Component & Environment Tag */}
                                 {issue.component && (
                                   <div className="mb-3">
                                     <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700/50">
@@ -196,7 +180,6 @@ export default function IssueKanban({
                                   </div>
                                 )}
 
-                                {/* Card Footer */}
                                 <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60 text-[10px] text-zinc-500">
                                   <div className="flex items-center gap-2">
                                     {issue._count?.comments !== undefined && (
@@ -213,7 +196,6 @@ export default function IssueKanban({
                                     ) : null}
                                   </div>
 
-                                  {/* Assignee Avatar */}
                                   <div className="flex items-center gap-1">
                                     {issue.assignee ? (
                                       <div
