@@ -1,11 +1,11 @@
-import { PrismaClient, Role, Priority, Severity, IssueStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { Role, Priority, Severity, IssueStatus } from "../src/types";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Seeding Bugzilla Reconstruction Database...");
 
-  // Clear existing data
   await prisma.activityLog.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.issueDependency.deleteMany();
@@ -14,7 +14,6 @@ async function main() {
   await prisma.project.deleteMany();
   await prisma.user.deleteMany();
 
-  // 1. Create Users
   const alice = await prisma.user.create({
     data: {
       name: "Sachin (Lead Dev)",
@@ -42,7 +41,6 @@ async function main() {
     },
   });
 
-  // 2. Create Projects & Components
   const coreProject = await prisma.project.create({
     data: {
       key: "CORE",
@@ -74,7 +72,6 @@ async function main() {
     include: { components: true },
   });
 
-  // 3. Create Issues / Bugs
   const bug1 = await prisma.issue.create({
     data: {
       key: "CORE-101",
@@ -86,7 +83,7 @@ async function main() {
       environment: "Node v20.20 / PostgreSQL 16 / Linux x64",
       version: "v1.2.0-beta",
       projectId: coreProject.id,
-      componentId: coreProject.components[2].id, // State Machine
+      componentId: coreProject.components[2].id,
       assigneeId: alice.id,
       reporterId: sreenidhi.id,
     },
@@ -103,7 +100,7 @@ async function main() {
       environment: "Safari 17.5 / macOS Sequoia",
       version: "v2.0.0",
       projectId: uiProject.id,
-      componentId: uiProject.components[0].id, // Kanban Board
+      componentId: uiProject.components[0].id,
       assigneeId: bob.id,
       reporterId: alice.id,
     },
@@ -120,13 +117,12 @@ async function main() {
       environment: "Production Cluster EU-1",
       version: "v1.1.9",
       projectId: coreProject.id,
-      componentId: coreProject.components[0].id, // Auth & ACL
+      componentId: coreProject.components[0].id,
       assigneeId: alice.id,
       reporterId: sreenidhi.id,
     },
   });
 
-  // 4. Create Issue Dependencies (CORE-102 Blocks BUG-101)
   await prisma.issueDependency.create({
     data: {
       blockingIssueId: bug3.id,
@@ -134,7 +130,6 @@ async function main() {
     },
   });
 
-  // 5. Create Comments & Audit Logs
   await prisma.comment.create({
     data: {
       body: "Investigating the worker thread pool setup. Appears to be an unclosed DB connection handle.",
@@ -153,7 +148,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Database seeded successfully with 3 issues, 2 projects, and audit logs!");
+  console.log("✅ Database seeded successfully!");
 }
 
 main()
