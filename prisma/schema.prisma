@@ -1,0 +1,180 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  DEVELOPER
+  QA
+  REPORTER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Severity {
+  TRIVIAL
+  MINOR
+  NORMAL
+  MAJOR
+  CRITICAL
+  BLOCKER
+}
+
+enum IssueStatus {
+  UNCONFIRMED
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+  CLOSED
+  REOPENED
+}
+
+enum Resolution {
+  FIXED
+  INVALID
+  DUPLICATE
+  WONTFIX
+  WORKSFORME
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  avatarUrl     String?
+  role          Role           @default(DEVELOPER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  assignedBugs  Issue[]        @relation("AssignedIssues")
+  reportedBugs  Issue[]        @relation("ReportedIssues")
+  comments      Comment[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  components  Component[]
+  issues      Issue[]
+
+  @@map("projects")
+}
+
+model Component {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  issues      Issue[]
+
+  @@map("components")
+}
+
+model Issue {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  title       String
+  description String      @db.Text
+  status      IssueStatus @default(NEW)
+  priority    Priority    @default(MEDIUM)
+  severity    Severity    @default(NORMAL)
+  resolution  Resolution?
+  
+  environment String?     
+  version     String?     
+
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  componentId String?
+  component   Component?  @relation(fields: [componentId], references: [id], onDelete: SetNull)
+
+  assigneeId  String?
+  assignee    User?       @relation("AssignedIssues", fields: [assigneeId], references: [id])
+
+  reporterId  String
+  reporter    User        @relation("ReportedIssues", fields: [reporterId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  comments    Comment[]
+  activities  ActivityLog[]
+
+  blockedBy   IssueDependency[] @relation("BlockedIssues")
+  blocking    IssueDependency[] @relation("DependantIssues")
+
+  @@index([status])
+  @@index([projectId])
+  @@map("issues")
+}
+
+model IssueDependency {
+  id              String   @id @default(cuid())
+  blockingIssueId String
+  blockedIssueId  String
+
+  blockingIssue   Issue    @relation("BlockedIssues", fields: [blockingIssueId], references: [id], onDelete: Cascade)
+  blockedIssue    Issue    @relation("DependantIssues", fields: [blockedIssueId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([blockingIssueId, blockedIssueId])
+  @@map("issue_dependencies")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String   @db.Text
+  isPrivate Boolean  @default(false)
+
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  field      String   
+  oldValue   String?
+  newValue   String?
+
+  issueId    String
+  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+
+  createdAt  DateTime @default(now())
+
+  @@map("activity_logs")
+}
