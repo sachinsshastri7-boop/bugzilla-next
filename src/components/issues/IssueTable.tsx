@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { IssueStatus, Priority, Severity } from "@prisma/client";
 import { IssueItem } from "@/types";
 import {
   getStatusStyle,
@@ -9,14 +8,7 @@ import {
   getSeverityStyle,
   formatDate,
 } from "@/lib/utils";
-import {
-  ArrowUpDown,
-  MessageSquare,
-  GitPullRequest,
-  User,
-  ExternalLink,
-  ShieldAlert,
-} from "lucide-react";
+import { ArrowUpDown, User, ExternalLink } from "lucide-react";
 
 interface IssueTableProps {
   issues: IssueItem[];
@@ -39,8 +31,8 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
   };
 
   const sortedIssues = [...issues].sort((a, b) => {
-    let valueA = a[sortField] || "";
-    let valueB = b[sortField] || "";
+    let valueA: string | number | Date = a[sortField] || "";
+    let valueB: string | number | Date = b[sortField] || "";
 
     if (sortField === "createdAt") {
       valueA = new Date(a.createdAt).getTime();
@@ -56,7 +48,6 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
     <div className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-2xl">
       <div className="overflow-x-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
         <table className="w-full text-left text-xs border-collapse">
-          {/* Table Header */}
           <thead>
             <tr className="border-b border-zinc-800/80 bg-zinc-900/60 text-zinc-400 font-mono text-[11px] uppercase tracking-wider select-none">
               <th
@@ -106,7 +97,6 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
             </tr>
           </thead>
 
-          {/* Table Body */}
           <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
             {sortedIssues.length === 0 ? (
               <tr>
@@ -126,19 +116,16 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
                     onClick={() => onSelectIssue && onSelectIssue(issue.key)}
                     className="hover:bg-zinc-900/80 transition-colors duration-150 cursor-pointer group"
                   >
-                    {/* Key */}
                     <td className="py-3 px-4 font-mono font-bold text-rose-400 whitespace-nowrap">
                       <span className="bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
                         {issue.key}
                       </span>
                     </td>
 
-                    {/* Summary */}
                     <td className="py-3 px-4 max-w-xs font-medium text-zinc-100 group-hover:text-rose-300 transition-colors truncate">
                       {issue.title}
                     </td>
 
-                    {/* Status */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       <span
                         className={`text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
@@ -147,17 +134,14 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
                       </span>
                     </td>
 
-                    {/* Priority */}
                     <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
                       <span className={priorityInfo.color}>{priorityInfo.label}</span>
                     </td>
 
-                    {/* Severity */}
                     <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
                       <span className={severityInfo.color}>{severityInfo.label}</span>
                     </td>
 
-                    {/* Component */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       {issue.component ? (
                         <span className="text-[10px] font-mono bg-zinc-900 text-zinc-400 px-2 py-0.5 rounded border border-zinc-800">
@@ -168,7 +152,6 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
                       )}
                     </td>
 
-                    {/* Assignee */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {issue.assignee ? (
@@ -188,12 +171,10 @@ export default function IssueTable({ issues, onSelectIssue }: IssueTableProps) {
                       </div>
                     </td>
 
-                    {/* Reported Date */}
                     <td className="py-3 px-4 font-mono text-[11px] text-zinc-500 whitespace-nowrap">
                       {formatDate(issue.createdAt)}
                     </td>
 
-                    {/* Action */}
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <button
                         onClick={(e) => {

@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { Role, Priority, Severity, IssueStatus } from "../src/types";
 
 const prisma = new PrismaClient();
 
@@ -18,7 +17,7 @@ async function main() {
     data: {
       name: "Sachin (Lead Dev)",
       email: "sachin@dev.org",
-      role: Role.ADMIN,
+      role: "ADMIN",
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
     },
   });
@@ -27,7 +26,7 @@ async function main() {
     data: {
       name: "Shrivishnu",
       email: "vishnu@dev.org",
-      role: Role.DEVELOPER,
+      role: "DEVELOPER",
       avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces",
     },
   });
@@ -36,7 +35,7 @@ async function main() {
     data: {
       name: "Sreenidhi (QA Manager)",
       email: "sreenidhi@qa.org",
-      role: Role.QA,
+      role: "QA",
       avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
     },
   });
@@ -77,9 +76,9 @@ async function main() {
       key: "CORE-101",
       title: "Memory leak during concurrent state transitions",
       description: "When 50+ concurrent requests attempt to update issue status, the state machine validation worker leaks memory in worker threads.",
-      status: IssueStatus.IN_PROGRESS,
-      priority: Priority.URGENT,
-      severity: Severity.BLOCKER,
+      status: "IN_PROGRESS",
+      priority: "URGENT",
+      severity: "BLOCKER",
       environment: "Node v20.20 / PostgreSQL 16 / Linux x64",
       version: "v1.2.0-beta",
       projectId: coreProject.id,
@@ -94,9 +93,9 @@ async function main() {
       key: "UI-201",
       title: "Kanban board card drag animation stutters on Safari",
       description: "Dragging issue cards across status columns causes frame drops below 30fps on WebKit engines.",
-      status: IssueStatus.NEW,
-      priority: Priority.HIGH,
-      severity: Severity.MINOR,
+      status: "NEW",
+      priority: "HIGH",
+      severity: "MINOR",
       environment: "Safari 17.5 / macOS Sequoia",
       version: "v2.0.0",
       projectId: uiProject.id,
@@ -111,9 +110,9 @@ async function main() {
       key: "CORE-102",
       title: "Unauthorized role can view private security comments",
       description: "Users with REPORTER role can bypass ACL restrictions via direct API calls to fetch private comments.",
-      status: IssueStatus.ASSIGNED,
-      priority: Priority.URGENT,
-      severity: Severity.CRITICAL,
+      status: "ASSIGNED",
+      priority: "URGENT",
+      severity: "CRITICAL",
       environment: "Production Cluster EU-1",
       version: "v1.1.9",
       projectId: coreProject.id,
