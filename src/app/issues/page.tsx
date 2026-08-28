@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import TopNav from "@/components/layout/TopNav";
 import IssueKanban from "@/components/issues/IssueKanban";
@@ -8,106 +8,37 @@ import IssueTable from "@/components/issues/IssueTable";
 import CreateIssueModal from "@/components/issues/CreateIssueModal";
 import IssueDetailView from "@/components/issues/IssueDetailView";
 import CommandPalette from "@/components/layout/CommandPalette";
-import { IssueItem, IssueStatus, Priority, Severity, Role } from "@/types";
-import { LayoutGrid, List, PlusCircle } from "lucide-react";
-
-const INITIAL_ISSUES: IssueItem[] = [
-  {
-    id: "iss-101",
-    key: "CORE-101",
-    title: "Memory leak during concurrent state transitions",
-    description:
-      "When 50+ concurrent requests attempt to update issue status, the state machine validation worker leaks memory handles in worker threads.",
-    status: "IN_PROGRESS",
-    priority: "URGENT",
-    severity: "BLOCKER",
-    environment: "Node v20.20 / PostgreSQL 16 / Linux x64",
-    version: "v1.2.0-beta",
-    createdAt: new Date("2026-08-25"),
-    updatedAt: new Date("2026-08-27"),
-    project: { key: "CORE", name: "Core Engine Infrastructure" },
-    component: { name: "State Machine" },
-    assignee: {
-      id: "u1",
-      name: "Sachin (Lead Dev)",
-      email: "sachin@dev.org",
-      role: "ADMIN",
-    },
-    reporter: {
-      id: "u3",
-      name: "Sreenidhi (QA Manager)",
-      email: "sreenidhi@qa.org",
-      role: "QA",
-    },
-    _count: { comments: 2, blockedBy: 1 },
-  },
-  {
-    id: "iss-201",
-    key: "UI-201",
-    title: "Kanban board card drag animation stutters on Safari",
-    description:
-      "Dragging issue cards across status columns causes frame drops below 30fps on WebKit engines.",
-    status: "NEW",
-    priority: "HIGH",
-    severity: "MINOR",
-    environment: "Safari 17.5 / macOS Sequoia",
-    version: "v2.0.0",
-    createdAt: new Date("2026-08-26"),
-    updatedAt: new Date("2026-08-26"),
-    project: { key: "UI", name: "Next.js Frontend & Visuals" },
-    component: { name: "Kanban Board" },
-    assignee: {
-      id: "u2",
-      name: "Shrivishnu",
-      email: "vishnu@dev.org",
-      role: "DEVELOPER",
-    },
-    reporter: {
-      id: "u1",
-      name: "Sachin (Lead Dev)",
-      email: "sachin@dev.org",
-      role: "ADMIN",
-    },
-    _count: { comments: 0, blockedBy: 0 },
-  },
-  {
-    id: "iss-102",
-    key: "CORE-102",
-    title: "Unauthorized role can view private security comments",
-    description:
-      "Users with REPORTER role can bypass ACL restrictions via direct API calls to fetch private comments.",
-    status: "ASSIGNED",
-    priority: "URGENT",
-    severity: "CRITICAL",
-    environment: "Production Cluster EU-1",
-    version: "v1.1.9",
-    createdAt: new Date("2026-08-24"),
-    updatedAt: new Date("2026-08-27"),
-    project: { key: "CORE", name: "Core Engine Infrastructure" },
-    component: { name: "Auth & ACL" },
-    assignee: {
-      id: "u1",
-      name: "Sachin (Lead Dev)",
-      email: "sachin@dev.org",
-      role: "ADMIN",
-    },
-    reporter: {
-      id: "u3",
-      name: "Sreenidhi (QA Manager)",
-      email: "sreenidhi@qa.org",
-      role: "QA",
-    },
-    _count: { comments: 1, blockedBy: 0 },
-  },
-];
+import { IssueItem, IssueStatus } from "@/types";
+import { LayoutGrid, List, PlusCircle, RefreshCw } from "lucide-react";
 
 export default function IssuesPage() {
-  const [issues, setIssues] = useState<IssueItem[]>(INITIAL_ISSUES);
+  const [issues, setIssues] = useState<IssueItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"kanban" | "table">("kanban");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [selectedIssueKey, setSelectedIssueKey] = useState<string | null>(null);
+
+  // Fetch issues from the database API endpoint
+  const fetchIssues = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/issues");
+      if (res.ok) {
+        const data = await res.json();
+        setIssues(data);
+      }
+    } catch (error) {
+      console.error("Failed to load issues from API:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIssues();
+  }, []);
 
   const filteredIssues = issues.filter(
     (issue) =>
@@ -117,33 +48,48 @@ export default function IssuesPage() {
         issue.component.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleStatusChange = (issueId: string, newStatus: IssueStatus) => {
+  // Handle status update by sending PATCH request to DB
+  const handleStatusChange = async (issueId: string, newStatus: IssueStatus) => {
+    // Optimistic UI update
     setIssues((prev) =>
       prev.map((iss) => (iss.id === issueId ? { ...iss, status: newStatus } : iss))
     );
+
+    const targetIssue = issues.find((i) => i.id === issueId);
+    if (!targetIssue) return;
+
+    try {
+      const res = await fetch(`/api/issues/${targetIssue.key}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        fetchIssues();
+      }
+    } catch (error) {
+      console.error("Failed to update status on server:", error);
+      fetchIssues();
+    }
   };
 
-  const handleCreateBug = (newBugData: any) => {
-    const newIssue: IssueItem = {
-      id: `iss-${Date.now()}`,
-      key: `${newBugData.projectKey}-${Math.floor(100 + Math.random() * 900)}`,
-      title: newBugData.title,
-      description: newBugData.description,
-      status: "NEW",
-      priority: newBugData.priority,
-      severity: newBugData.severity,
-      environment: newBugData.environment,
-      version: newBugData.version,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      project: { key: newBugData.projectKey, name: newBugData.projectKey === "CORE" ? "Core Engine Infrastructure" : "Next.js Frontend" },
-      component: { name: newBugData.component },
-      assignee: null,
-      reporter: { id: "u1", name: "Sachin (Lead Dev)", email: "sachin@dev.org", role: "ADMIN" },
-      _count: { comments: 0, blockedBy: 0 },
-    };
+  // Handle bug creation by sending POST request to DB
+  const handleCreateBug = async (newBugData: any) => {
+    try {
+      const res = await fetch("/api/issues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBugData),
+      });
 
-    setIssues([newIssue, ...issues]);
+      if (res.ok) {
+        fetchIssues(); // Refresh list from database
+      }
+    } catch (error) {
+      console.error("Failed to create issue on server:", error);
+    }
   };
 
   const activeIssue = issues.find((i) => i.key === selectedIssueKey);
@@ -174,6 +120,14 @@ export default function IssuesPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={fetchIssues}
+                className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition"
+                title="Refresh from Database"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-rose-400" : ""}`} />
+              </button>
+
               <div className="flex items-center p-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono">
                 <button
                   onClick={() => setViewMode("kanban")}
@@ -206,7 +160,11 @@ export default function IssuesPage() {
             </div>
           </div>
 
-          {viewMode === "kanban" ? (
+          {loading && issues.length === 0 ? (
+            <div className="py-20 text-center font-mono text-xs text-zinc-500 animate-pulse">
+              Connecting to database & loading bugs...
+            </div>
+          ) : viewMode === "kanban" ? (
             <IssueKanban
               initialIssues={filteredIssues}
               onStatusChange={handleStatusChange}
