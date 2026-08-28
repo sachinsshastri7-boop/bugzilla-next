@@ -9,8 +9,17 @@ generator client {
 enum Role {
   ADMIN
   DEVELOPER
-  QA
   REPORTER
+  TRIAGER
+}
+
+enum Status {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+  CLOSED
+  REOPENED
 }
 
 enum Priority {
@@ -29,40 +38,18 @@ enum Severity {
   BLOCKER
 }
 
-enum IssueStatus {
-  UNCONFIRMED
-  NEW
-  ASSIGNED
-  IN_PROGRESS
-  RESOLVED
-  VERIFIED
-  CLOSED
-  REOPENED
-}
-
-enum Resolution {
-  FIXED
-  INVALID
-  DUPLICATE
-  WONTFIX
-  WORKSFORME
-}
-
 model User {
-  id            String         @id @default(cuid())
-  name          String
-  email         String         @unique
-  avatarUrl     String?
-  role          Role           @default(DEVELOPER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  assignedBugs  Issue[]        @relation("AssignedIssues")
-  reportedBugs  Issue[]        @relation("ReportedIssues")
-  comments      Comment[]
-  activityLogs  ActivityLog[]
-
-  @@map("users")
+  id             String         @id @default(cuid())
+  name           String
+  email          String         @unique
+  role           Role           @default(DEVELOPER)
+  avatarUrl      String?
+  reportedIssues Issue[]        @relation("ReporterIssues")
+  assignedIssues Issue[]        @relation("AssigneeIssues")
+  comments       Comment[]
+  auditLogs      AuditLog[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Project {
@@ -70,110 +57,86 @@ model Project {
   key         String      @unique
   name        String
   description String?
+  issues      Issue[]
+  components  Component[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-
-  components  Component[]
-  issues      Issue[]
-
-  @@map("projects")
 }
 
 model Component {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  name      String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issues    Issue[]
+  createdAt DateTime @default(now())
 
-  issues      Issue[]
-
-  @@map("components")
+  @@unique([projectId, name])
 }
 
 model Issue {
-  id          String      @id @default(cuid())
-  key         String      @unique
+  id          String    @id @default(cuid())
+  key         String    @unique
   title       String
-  description String      @db.Text
-  status      IssueStatus @default(NEW)
-  priority    Priority    @default(MEDIUM)
-  severity    Severity    @default(NORMAL)
-  resolution  Resolution?
+  description String
+  status      Status    @default(NEW)
+  priority    Priority  @default(MEDIUM)
+  severity    Severity  @default(NORMAL)
+  environment String?
+  version     String?
   
-  environment String?     
-  version     String?     
-
   projectId   String
-  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
+  project     Project   @relation(fields: [projectId], references: [id])
+  
   componentId String?
-  component   Component?  @relation(fields: [componentId], references: [id], onDelete: SetNull)
-
-  assigneeId  String?
-  assignee    User?       @relation("AssignedIssues", fields: [assigneeId], references: [id])
-
+  component   Component? @relation(fields: [componentId], references: [id])
+  
   reporterId  String
-  reporter    User        @relation("ReportedIssues", fields: [reporterId], references: [id])
-
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  reporter    User      @relation("ReporterIssues", fields: [reporterId], references: [id])
+  
+  assigneeId  String?
+  assignee    User?     @relation("AssigneeIssues", fields: [assigneeId], references: [id])
 
   comments    Comment[]
-  activities  ActivityLog[]
+  auditLogs   AuditLog[]
+  
+  blocks      IssueDependency[] @relation("BlockingIssue")
+  blockedBy   IssueDependency[] @relation("BlockedIssue")
 
-  blockedBy   IssueDependency[] @relation("BlockedIssues")
-  blocking    IssueDependency[] @relation("DependantIssues")
-
-  @@index([status])
-  @@index([projectId])
-  @@map("issues")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model IssueDependency {
-  id              String   @id @default(cuid())
+  id             String @id @default(cuid())
   blockingIssueId String
+  blockingIssue   Issue  @relation("BlockingIssue", fields: [blockingIssueId], references: [id], onDelete: Cascade)
+  
   blockedIssueId  String
-
-  blockingIssue   Issue    @relation("BlockedIssues", fields: [blockingIssueId], references: [id], onDelete: Cascade)
-  blockedIssue    Issue    @relation("DependantIssues", fields: [blockedIssueId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime @default(now())
+  blockedIssue   Issue  @relation("BlockedIssue", fields: [blockedIssueId], references: [id], onDelete: Cascade)
 
   @@unique([blockingIssueId, blockedIssueId])
-  @@map("issue_dependencies")
 }
 
 model Comment {
   id        String   @id @default(cuid())
-  body      String   @db.Text
-  isPrivate Boolean  @default(false)
-
+  content   String
   issueId   String
   issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
-
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("comments")
 }
 
-model ActivityLog {
-  id         String   @id @default(cuid())
-  field      String   
-  oldValue   String?
-  newValue   String?
-
-  issueId    String
-  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-
-  actorId    String
-  actor      User     @relation(fields: [actorId], references: [id])
-
-  createdAt  DateTime @default(now())
-
-  @@map("activity_logs")
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  field     String?
+  oldValue  String?
+  newValue  String?
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }

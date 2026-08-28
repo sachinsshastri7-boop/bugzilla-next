@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/issues - Fetch bugs with filters
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -42,7 +41,6 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/issues - File a new bug
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -52,25 +50,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const project = await prisma.project.findUnique({ where: { key: projectKey } });
+    let project = await prisma.project.findUnique({ where: { key: projectKey } });
     if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      project = await prisma.project.findFirst();
+    }
+    
+    if (!project) {
+      project = await prisma.project.create({
+        data: {
+          key: projectKey || "CORE",
+          name: "Core Infrastructure",
+        },
+      });
     }
 
-    const reporter = await prisma.user.findFirst();
+    let reporter = await prisma.user.findFirst();
     if (!reporter) {
-      return NextResponse.json({ error: "No system user found for reporting" }, { status: 400 });
+      reporter = await prisma.user.create({
+        data: {
+          name: "Sachin",
+          email: "sachin@bugzilla.local",
+          role: "ADMIN",
+        },
+      });
     }
 
     const issueCount = await prisma.issue.count({ where: { projectId: project.id } });
-    const issueKey = `${projectKey}-${101 + issueCount}`;
+    const issueKey = `${project.key}-${101 + issueCount}`;
 
     let componentId: string | undefined = undefined;
     if (component) {
-      const comp = await prisma.component.findFirst({
+      let comp = await prisma.component.findFirst({
         where: { projectId: project.id, name: component },
       });
-      if (comp) componentId = comp.id;
+
+      if (!comp) {
+        comp = await prisma.component.create({
+          data: {
+            name: component,
+            projectId: project.id,
+          },
+        });
+      }
+      componentId = comp.id;
     }
 
     const newIssue = await prisma.issue.create({

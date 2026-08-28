@@ -1,160 +1,66 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Seeding Bugzilla Reconstruction Database...");
+  console.log("Seeding database on Supabase...");
 
-  await prisma.activityLog.deleteMany();
-  await prisma.comment.deleteMany();
-  await prisma.issueDependency.deleteMany();
-  await prisma.issue.deleteMany();
-  await prisma.component.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.user.deleteMany();
-
-  const alice = await prisma.user.create({
-    data: {
-      name: "Sachin (Lead Dev)",
-      email: "sachin@dev.org",
+  const sachin = await prisma.user.upsert({
+    where: { email: "sachin@bugzilla.local" },
+    update: {},
+    create: {
+      name: "Sachin",
+      email: "sachin@bugzilla.local",
       role: "ADMIN",
-      avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
     },
   });
 
-  const bob = await prisma.user.create({
-    data: {
-      name: "Shrivishnu",
-      email: "vishnu@dev.org",
-      role: "DEVELOPER",
-      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces",
-    },
-  });
-
-  const sreenidhi = await prisma.user.create({
-    data: {
-      name: "Sreenidhi (QA Manager)",
-      email: "sreenidhi@qa.org",
-      role: "QA",
-      avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
-    },
-  });
-
-  const coreProject = await prisma.project.create({
-    data: {
+  await prisma.project.upsert({
+    where: { key: "CORE" },
+    update: {},
+    create: {
       key: "CORE",
-      name: "Core Engine Infrastructure",
-      description: "Low-level system architecture and memory management engine.",
-      components: {
-        create: [
-          { name: "Auth & ACL", description: "Role-based access control and session management." },
-          { name: "Database Engine", description: "Prisma ORM data access layers and query optimization." },
-          { name: "State Machine", description: "Bugzilla lifecycle transitions and status enforcement." },
-        ],
-      },
+      name: "Core Infrastructure",
+      description: "Backend microservices and data pipelines",
     },
-    include: { components: true },
   });
 
-  const uiProject = await prisma.project.create({
-    data: {
+  await prisma.project.upsert({
+    where: { key: "UI" },
+    update: {},
+    create: {
       key: "UI",
-      name: "Next.js Frontend & Visuals",
-      description: "Modern Kanban board, command palette, and interactive workflows.",
-      components: {
-        create: [
-          { name: "Kanban Board", description: "Drag and drop board transitions." },
-          { name: "Command Palette", description: "Ctrl+K keyboard quick navigation." },
-        ],
-      },
-    },
-    include: { components: true },
-  });
-
-  const bug1 = await prisma.issue.create({
-    data: {
-      key: "CORE-101",
-      title: "Memory leak during concurrent state transitions",
-      description: "When 50+ concurrent requests attempt to update issue status, the state machine validation worker leaks memory in worker threads.",
-      status: "IN_PROGRESS",
-      priority: "URGENT",
-      severity: "BLOCKER",
-      environment: "Node v20.20 / PostgreSQL 16 / Linux x64",
-      version: "v1.2.0-beta",
-      projectId: coreProject.id,
-      componentId: coreProject.components[2].id,
-      assigneeId: alice.id,
-      reporterId: sreenidhi.id,
+      name: "Web Client Interface",
+      description: "Next.js frontend user dashboard",
     },
   });
 
-  const bug2 = await prisma.issue.create({
-    data: {
-      key: "UI-201",
-      title: "Kanban board card drag animation stutters on Safari",
-      description: "Dragging issue cards across status columns causes frame drops below 30fps on WebKit engines.",
-      status: "NEW",
-      priority: "HIGH",
-      severity: "MINOR",
-      environment: "Safari 17.5 / macOS Sequoia",
-      version: "v2.0.0",
-      projectId: uiProject.id,
-      componentId: uiProject.components[0].id,
-      assigneeId: bob.id,
-      reporterId: alice.id,
+  await prisma.project.upsert({
+    where: { key: "SEC" },
+    update: {},
+    create: {
+      key: "SEC",
+      name: "Auth & Cryptography",
+      description: "Zero-knowledge encryption & key management",
     },
   });
 
-  const bug3 = await prisma.issue.create({
-    data: {
-      key: "CORE-102",
-      title: "Unauthorized role can view private security comments",
-      description: "Users with REPORTER role can bypass ACL restrictions via direct API calls to fetch private comments.",
-      status: "ASSIGNED",
-      priority: "URGENT",
-      severity: "CRITICAL",
-      environment: "Production Cluster EU-1",
-      version: "v1.1.9",
-      projectId: coreProject.id,
-      componentId: coreProject.components[0].id,
-      assigneeId: alice.id,
-      reporterId: sreenidhi.id,
-    },
-  });
-
-  await prisma.issueDependency.create({
-    data: {
-      blockingIssueId: bug3.id,
-      blockedIssueId: bug1.id,
-    },
-  });
-
-  await prisma.comment.create({
-    data: {
-      body: "Investigating the worker thread pool setup. Appears to be an unclosed DB connection handle.",
-      issueId: bug1.id,
-      authorId: alice.id,
-    },
-  });
-
-  await prisma.activityLog.create({
-    data: {
-      field: "status",
-      oldValue: "NEW",
-      newValue: "IN_PROGRESS",
-      issueId: bug1.id,
-      actorId: alice.id,
-    },
-  });
-
-  console.log("✅ Database seeded successfully!");
+  console.log("Database seeded successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Seeding failed:", e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
