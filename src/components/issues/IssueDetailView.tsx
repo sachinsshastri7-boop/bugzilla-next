@@ -9,18 +9,21 @@ import {
 } from "@/lib/utils";
 import { ALLOWED_TRANSITIONS } from "@/lib/stateMachine";
 import ActivityTimeline from "./ActivityTimeline";
+import DependencyGraph from "./DependencyGraph";
 import { X, Send } from "lucide-react";
 
 interface IssueDetailViewProps {
   issue: IssueItem;
   onClose: () => void;
   onUpdateStatus?: (issueId: string, nextStatus: IssueStatus) => void;
+  onSelectIssueKey?: (key: string) => void;
 }
 
 export default function IssueDetailView({
   issue,
   onClose,
   onUpdateStatus,
+  onSelectIssueKey,
 }: IssueDetailViewProps) {
   const [activeTab, setActiveTab] = useState<"details" | "audit">("details");
   const [commentText, setCommentText] = useState("");
@@ -60,6 +63,7 @@ export default function IssueDetailView({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-950 border border-zinc-800 rounded-2xl p-6 text-zinc-100 shadow-2xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
         
+        {/* Header */}
         <div className="flex items-start justify-between border-b border-zinc-800/80 pb-4 mb-5">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2.5">
@@ -83,9 +87,12 @@ export default function IssueDetailView({
           </button>
         </div>
 
+        {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
           <div className="lg:col-span-2 space-y-6">
             
+            {/* Description */}
             <div className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-2">
               <h4 className="text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
                 Description / Reproduction Steps
@@ -95,6 +102,13 @@ export default function IssueDetailView({
               </p>
             </div>
 
+            {/* Dependency Graph Visualizer */}
+            <DependencyGraph
+              currentIssue={issue}
+              onSelectIssue={(key) => onSelectIssueKey && onSelectIssueKey(key)}
+            />
+
+            {/* Lifecycle Transitions */}
             <div className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-2.5">
               <h4 className="text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
                 State Machine Transition
@@ -116,6 +130,7 @@ export default function IssueDetailView({
               </div>
             </div>
 
+            {/* Comments vs Audit Trail Tabs */}
             <div className="space-y-4">
               <div className="flex border-b border-zinc-800 text-xs font-mono">
                 <button
@@ -191,6 +206,7 @@ export default function IssueDetailView({
 
           </div>
 
+          {/* Sidebar Properties */}
           <div className="space-y-4 text-xs font-mono bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/80 h-fit">
             <div className="space-y-1 pb-3 border-b border-zinc-800">
               <span className="text-[10px] text-zinc-500 uppercase">Priority / Severity</span>
@@ -229,6 +245,7 @@ export default function IssueDetailView({
               <p className="text-zinc-500 text-[10px]">Version: {issue.version || "N/A"}</p>
             </div>
           </div>
+
         </div>
 
       </div>
