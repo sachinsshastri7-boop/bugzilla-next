@@ -81,13 +81,14 @@ To link automatic commit resolution to your repository:
 4. Click **Add webhook**.
 5. Test by pushing a commit with `Fixes <ISSUE_KEY>` in the commit message.
 
-📜 Scripts Reference:
+## 📜 Scripts Reference
 
-Command,Description
-npm run dev,Launches the Next.js development server
-npm run build,Generates Prisma Client and builds the production app
-npm run start,Runs the compiled production build
-npm run lint,Runs Next.js ESLint checks
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Launches the Next.js development server |
+| `npm run build` | Generates Prisma Client and builds the production app |
+| `npm run start` | Runs the compiled production build |
+| `npm run lint` | Runs Next.js ESLint checks |
 
 📄 License:
 ---
