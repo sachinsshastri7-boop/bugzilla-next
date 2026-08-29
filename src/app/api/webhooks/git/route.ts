@@ -21,12 +21,11 @@ export async function POST(request: Request) {
 
         const issue = await prisma.issue.findUnique({ where: { key: issueKey } });
         if (issue) {
-          // Move issue status to RESOLVED and set resolution to FIXED
+          // Update issue status to RESOLVED
           await prisma.issue.update({
             where: { key: issueKey },
             data: {
               status: "RESOLVED",
-              resolution: "FIXED",
             },
           });
 
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
           if (botUser) {
             await prisma.comment.create({
               data: {
-                body: `🤖 Automated Git Resolution: Issue resolved via commit ${commit.id.substring(
+                content: `🤖 Automated Git Resolution: Issue resolved via commit ${commit.id.substring(
                   0,
                   7
                 )} ("${message}") by ${commit.author?.name || "Git User"}.`,
@@ -44,13 +43,14 @@ export async function POST(request: Request) {
               },
             });
 
-            await prisma.activityLog.create({
+            await prisma.auditLog.create({
               data: {
+                action: "RESOLVE_ISSUE",
                 field: "status",
                 oldValue: issue.status,
                 newValue: "RESOLVED",
                 issueId: issue.id,
-                actorId: botUser.id,
+                userId: botUser.id,
               },
             });
           }

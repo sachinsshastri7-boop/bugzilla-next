@@ -46,13 +46,14 @@ export async function PATCH(
     if (status && status !== issue.status) {
       const actor = await prisma.user.findFirst();
       if (actor) {
-        await prisma.activityLog.create({
+        await prisma.auditLog.create({
           data: {
+            action: "UPDATE_STATUS",
             field: "status",
             oldValue: issue.status,
             newValue: status,
             issueId: issue.id,
-            actorId: actor.id,
+            userId: actor.id,
           },
         });
       }
