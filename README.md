@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bugzilla 2.0 🐛
 
-## Getting Started
+> **Modern Issue Tracking & Automated Git Workflow Platform**  
+> Built with Next.js 16, TypeScript, Prisma, Tailwind CSS v4, and PostgreSQL.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Live Demo
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Production Application:** [https://bugzilla-next.vercel.app/](https://bugzilla-next.vercel.app/)
+* **Database Engine:** Supabase PostgreSQL (Connection Pooling)
+* **Deployment Platform:** Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ Features
 
-## Learn More
+* **Interactive Issue Management:**
+  * Modern Kanban Board with drag-and-drop state transitions across `NEW / REPORTED`, `ASSIGNED`, `IN PROGRESS`, `RESOLVED`, and `VERIFIED / CLOSED`.
+  * Comprehensive Data Grid / Table views for high-density issue triage.
+  * Rapid issue creation with global search modal (`⌘K`).
 
-To learn more about Next.js, take a look at the following resources:
+* **Automated Git Integration (Webhooks):**
+  * Auto-resolves tracked bugs when commit messages contain keyword pattern triggers (e.g., `Fixes CORE-101`, `Closes CORE-102`).
+  * Automatically appends bot comments containing commit SHA, author info, and timestamps.
+  * Maintains an automated audit log trail of status changes and system events.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* **Developer Experience & Architecture:**
+  * Full dark-theme design system engineered using **Tailwind CSS v4**.
+  * Strongly typed database operations powered by **Prisma ORM**.
+  * Fast client/server builds using Next.js Turbopack compiler.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Framework:** Next.js 16.3.3 (App Router)
+* **Language:** TypeScript
+* **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`)
+* **Database & ORM:** PostgreSQL (Supabase), Prisma ORM
+* **Icons & UI Utilities:** Lucide React, `clsx`, `tailwind-merge`, `@hello-pangea/dnd`
+* **Runtime Execution:** Node.js / `npx tsx`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚦 Getting Started Locally
+
+### Prerequisites
+
+* Node.js (v20+ recommended)
+* npm / pnpm
+* PostgreSQL instance (Local or Cloud provider)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/](htt
+   ps://github.com/)<your-username>/bugzilla-next.git
+   cd bugzilla-next
+2. **Install dependencies**:
+   npm install
+3. **Create a .env file in the root directory:**
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/bugzilla"
+4. **Initialize Database Schema & Seed Data:**
+   npx prisma db push
+   npx prisma db seed
+5. **Start the Development Server:**
+   npm run dev
+
+## 🔗 GitHub Webhook Integration Setup
+
+To link automatic commit resolution to your repository:
+
+1. Open your repository on **GitHub** → **Settings** → **Webhooks**.
+2. Click **Add webhook**.
+3. Configure the parameters:
+   * **Payload URL:** `https://bugzilla-next.vercel.app/api/webhooks/git`
+   * **Content type:** `application/json`
+   * **Event trigger:** `Just the push event`
+4. Click **Add webhook**.
+5. Test by pushing a commit with `Fixes <ISSUE_KEY>` in the commit message.
+
+📜 Scripts Reference:
+
+Command,Description
+npm run dev,Launches the Next.js development server
+npm run build,Generates Prisma Client and builds the production app
+npm run start,Runs the compiled production build
+npm run lint,Runs Next.js ESLint checks
+
+📄 License:
+---
+
+### Terminal Command to Commit & Push
+
+```powershell
+git add README.md
+git commit -m "docs: add complete production README for project submission"
+git push origin main
+
+   
